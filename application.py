@@ -21,7 +21,7 @@ class Movie(db.Model):
     duration = db.Column(db.Integer, nullable=False)
     imdb_rating = db.Column(db.Float, nullable=False)
 
-    def __rep__(self):
+    def __repr__(self):
         return f"<Movie(id='{self.id}', title='{self.title}', year={self.release_year}, genre='{self.genre}', director='{self.director}', rating='{self.rating}', duration='{self.duration}', imdb_rating={self.imdb_rating})>"
 
 
@@ -48,7 +48,7 @@ def get_movies():
     movies = Movie.query.all()
 
     # serialize SQLAlchemy objects to JSON
-    # converting object state into a format that can be transmitted or stored i.e JSON
+    # serialize means converting object state into a format that can be transmitted or stored i.e JSON
     movies_list = []
     for movie in movies:
         movie_data = {
@@ -127,7 +127,7 @@ def update_movie(id):
     # fetch specific movie to update by querying its ID
     movie = Movie.query.get_or_404(id)
 
-    # request.get_json retrieves JSON data from the client to my server
+    # Retrieve JSON data from the client to my server
     data = request.get_json()
 
     title = data['title']
