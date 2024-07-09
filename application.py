@@ -18,7 +18,7 @@ class Movie(db.Model):
     imdb_rating = db.Column(db.Float, nullable=False)
 
     def __rep__(self):
-        return f"<Movie(title='{self.title}', year={self.release_year}, genre='{self.genre}', director='{self.director}', rating='{self.rating}', duration='{self.duration}', imdb_rating={self.imdb_rating})>"
+        return f"<Movie(id='{self.id}', title='{self.title}', year={self.release_year}, genre='{self.genre}', director='{self.director}', rating='{self.rating}', duration='{self.duration}', imdb_rating={self.imdb_rating})>"
 
 
 @app.route('/')
@@ -39,9 +39,12 @@ def index():
 
 @app.route('/movies')
 def get_movies():
+
+    # query that retrieves all records from the Movie table in the database.
     movies = Movie.query.all()
 
-    # serialize (converting object state into a format that can be transmitted or stored i.e JSON) SQLAlchemy objects to JSON
+    # serialize SQLAlchemy objects to JSON
+    # converting object state into a format that can be transmitted or stored i.e JSON
     movies_list = []
     for movie in movies:
         movie_data = {
@@ -59,8 +62,30 @@ def get_movies():
     return {"movies": movies_list}
 
 
+@app.route('/movies/<id>', methods=['GET'])
+def get_one_movie(id):
+
+    # query movie by id
+    movie = Movie.query.get(id)
+    if movie is None:
+        return {'error': 'Movie not found'}
+
+    movie_data = {
+        'id': movie.id,
+        'title': movie.title,
+        'release_year': movie.release_year,
+        'genre': movie.genre,
+        'director': movie.director,
+        'rating': movie.rating,
+        'duration': movie.duration,
+        'imdb_rating': movie.imdb_rating
+    }
+
+    return movie_data
+
+
 @app.route('/movies', methods=['POST'])
-def add_movies():
+def add_movie():
 
     # request.get_json retrieves JSON data from the client to my server
     data = request.get_json()
