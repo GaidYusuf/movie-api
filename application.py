@@ -23,7 +23,18 @@ class Movie(db.Model):
 
 @app.route('/')
 def index():
-    return 'Hello!'
+    return """
+    <h1>Welcome to the Movie API</h1>
+    <p>This is a RESTful API for managing and retrieving information about movies.</p>
+    <p>Use the following endpoints to interact with the API:</p>
+    <ul>
+        <li>GET /movies - Retrieve a list of all movies</li>
+        <li>POST /movies - Add a new movie</li>
+        <li>GET /movies/&lt;id&gt; - Retrieve details of a specific movie by ID</li>
+        <li>PUT /movies/&lt;id&gt; - Update a specific movie by ID</li>
+        <li>DELETE /movies/&lt;id&gt; - Delete a specific movie by ID</li>
+    </ul>
+    """
 
 
 @app.route('/movies')
