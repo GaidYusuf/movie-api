@@ -1,9 +1,13 @@
 from flask import Flask, request
 from flask_sqlalchemy import SQLAlchemy
 
+# instantiate flask app
 app = Flask(__name__)
 
+# set configs
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///data.db'
+
+# instantiate db object
 db = SQLAlchemy(app)
 
 
@@ -66,9 +70,7 @@ def get_movies():
 def get_one_movie(id):
 
     # query movie by id
-    movie = Movie.query.get(id)
-    if movie is None:
-        return {'error': 'Movie not found'}
+    movie = Movie.query.get_or_404(id)
 
     movie_data = {
         'id': movie.id,
@@ -117,6 +119,38 @@ def add_movie():
         db.session.commit()
 
         return {'message': 'Movie added successfully'}
+
+
+@app.route('/movies/<id>', methods=['PUT'])
+def update_movie(id):
+
+    # fetch specific movie to update by querying its ID
+    movie = Movie.query.get_or_404(id)
+
+    # request.get_json retrieves JSON data from the client to my server
+    data = request.get_json()
+
+    title = data['title']
+    release_year = data['release_year']
+    genre = data['genre']
+    director = data['director']
+    rating = data["rating"]
+    duration = data["duration"]
+    imdb_rating = data["imdb_rating"]
+
+    # Update movie attributes in database
+    movie.title = title
+    movie.release_year = release_year
+    movie.genre = genre
+    movie.director = director
+    movie.rating = rating
+    movie.duration = duration
+    movie.imdb_rating = imdb_rating
+
+    # Commit the changes to the database
+    db.session.commit()
+
+    return {'message': 'Movie updated successfully'}
 
 
 @app.route('/movies/<id>', methods=['DELETE'])
