@@ -92,3 +92,21 @@ def add_movies():
         db.session.commit()
 
         return {'message': 'Movie added successfully'}
+
+
+@app.route('/movies/<id>', methods=['DELETE'])
+def delete_movie(id):
+
+    # query movie by id
+    movie = Movie.query.get(id)
+
+    # fetch all remaining movies and update their id's
+    movies = Movie.query.order_by(Movie.id).all()
+    for index, movie in enumerate(movies):
+        movie.id = index + 1
+
+    # delete movie from database
+    db.session.delete(movie)
+    db.session.commit()
+
+    return {'message': 'Movie deleted successfully'}
