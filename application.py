@@ -105,9 +105,9 @@ def get_user():
         'password': user.password,
     }
 
-    # Check if user exists
+    # check if user exists
     if user:
-        return jsonify({'id': user.id, 'username': user.username, 'password': user.password})
+        return jsonify(user_data), 200
     else:
         return jsonify({'message': 'User not found'}), 404
 
