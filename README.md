@@ -36,26 +36,33 @@ A RESTful API built with Flask for managing and retrieving information about mov
    cd movie-api-flask
 
    ```
-   
+
 2. **Install dependencies:**
+
    ```bash
    pip install -r requirements.txt
- 
+
    ```
 
 3. **Set up the database:**
-    ```bash
-    python
-    >>> from app import db
-    >>> db.create_all()
-    >>> exit()
+
+   ```bash
+   python
+   >>> from app import db
+   >>> db.create_all()
+   >>> exit()
+
+   ```
 
 4. **Run the application**
-    ```bash
-    flask run
+
+   ```bash
+   flask run
+
+   ```
 
 5. **Access the API:**
-    Open your web browser or a tool like Postman and go to http://localhost:5000/ to interact with the API.
+   Open your web browser or a tool like Postman and go to http://localhost:5000/ to interact with the API.
 
 ## Endpoints
 
@@ -82,6 +89,7 @@ Content-Type: application/json
 }
 
 ```
+
 ### Login and Obtain JWT Token
 
 ```http
@@ -94,6 +102,7 @@ Content-Type: application/json
 }
 
 ```
+
 ### Add a New Movie
 
 ```http
@@ -112,3 +121,24 @@ Content-Type: application/json
 }
 
 ```
+
+## Testing with Postman
+
+You can test the API endpoints using Postman:
+
+### Import the Postman Collection:
+
+1. Download the Postman collection file from [here](https://app.getpostman.com/join-team?invite_code=85d9f9bd1cee72f043e8872208cbd513).
+2. Open Postman and import the collection using `File > Import`.
+3. The collection includes pre-configured requests for each API endpoint.
+
+### Set Up Environment Variables:
+
+1. Create a new environment in Postman.
+2. Add a variable `base_url` with the value `http://localhost:5000/`.
+3. Use `base_url` in each request's URL to easily switch between environments.
+
+### Send Requests:
+
+- Modify request bodies as needed (e.g., for `POST` and `PUT` requests).
+- Set the `Authorization` header for protected routes using `Bearer <your_access_token>` obtained from `/login`.
