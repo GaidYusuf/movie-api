@@ -1,14 +1,28 @@
-from flask import Flask, request
+from flask import Flask, request, jsonify
 from flask_sqlalchemy import SQLAlchemy
+from flask_jwt_extended import JWTManager, create_access_token, jwt_required, get_jwt_identity, get_jwt
+from datetime import datetime, timedelta
 
 # instantiate flask app
 app = Flask(__name__)
 
-# set configs
+# configure application to make use of preferred DBMS
+# SQlite will be used as the preferred DBMS as it doesn't require a separate server
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///data.db'
 
-# instantiate db object
+# configure the application for JWT Authentication
+app.config['SECRET_KEY'] = 'your_strong_secret_key'
+app.config["JWT_SECRET_KEY"] = 'your_jwt_secret_key'
+app.config['JWT_TOKEN_LOCATION'] = ['headers']
+app.config['JWT_ACCESS_TOKEN_EXPIRES'] = timedelta(
+    hours=2)  # Example: Set token expiration time
+
+# initialize the database in my application
+# instantiate db object and this will act as a bridge between the application and the database
 db = SQLAlchemy(app)
+
+# JWT initialization
+jwt = JWTManager(app)
 
 
 class Movie(db.Model):
@@ -23,6 +37,79 @@ class Movie(db.Model):
 
     def __repr__(self):
         return f"<Movie(id='{self.id}', title='{self.title}', year={self.release_year}, genre='{self.genre}', director='{self.director}', rating='{self.rating}', duration='{self.duration}', imdb_rating={self.imdb_rating})>"
+
+
+# create User Model to store user's details
+class User(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    username = db.Column(db.String(20), unique=True, nullable=False)
+    password = db.Column(db.String(80), nullable=False)
+
+    def __repr__(self):
+        return f'<User {self.username}>'
+
+
+@app.route('/register', methods=['GET', 'POST'])
+def register():
+
+    # request.get_json retrieves JSON data from the client to my server
+    data = request.get_json()
+
+    username = data['username']
+    password = data['password']
+
+    user_exists = bool(User.query.filter_by(username=username).first())
+    if user_exists is True:
+        return jsonify({'error': 'User already exists'}), 400
+
+    # create a new User object using data from the JSON request
+    new_user = User(username=username, password=password)
+
+    # add the new user to database
+    db.session.add(new_user)
+    db.session.commit()
+
+
+@app.route('/login', methods=['POST'])
+def login():
+
+    # request.get_json retrieves JSON data from the client to my server
+    data = request.get_json()
+
+    username = data['username']
+    password = data['password']
+
+    user = User.query.filter_by(username=username).first()
+
+    if user and user.password == password:
+        access_token = create_access_token(identity=user.id)
+        return jsonify({'access_token': access_token}), 200
+
+    return jsonify({'error': 'Invalid username or password'}), 401
+
+
+# @jwt_required decorator is used to protect specific routes that require authentication
+# This decorator will confirm that there's a JWT access token in the request headers before allowing access to the page
+@app.route('/get_user', methods=['GET'])
+@jwt_required()
+def get_user():
+    # fetch the user ID from the JWT token
+    user_id = get_jwt_identity()
+
+    # query the user by id from the User table
+    user = User.query.get_or_404(user_id)
+
+    user_data = {
+        'id': user.id,
+        'username': user.username,
+        'password': user.password,
+    }
+
+    # Check if user exists
+    if user:
+        return jsonify({'id': user.id, 'username': user.username, 'password': user.password})
+    else:
+        return jsonify({'message': 'User not found'}), 404
 
 
 @app.route('/')
@@ -63,7 +150,7 @@ def get_movies():
         }
         movies_list.append(movie_data)
 
-    return {"movies": movies_list}
+    return jsonify(movies_list), 200
 
 
 @app.route('/movies/<id>', methods=['GET'])
@@ -83,51 +170,56 @@ def get_one_movie(id):
         'imdb_rating': movie.imdb_rating
     }
 
-    return movie_data
+    return jsonify(movie_data), 200
 
 
 @app.route('/movies', methods=['POST'])
+@jwt_required()
 def add_movie():
 
     # request.get_json retrieves JSON data from the client to my server
     data = request.get_json()
 
+    # Check if all required fields are present in the request data
+    required_fields = ['title', 'release_year', 'genre',
+                       'director', 'rating', 'duration', 'imdb_rating']
+    for field in required_fields:
+        if field not in data:
+            # If any required field is missing, return an error response with a 400 status code
+            return {'error': f'Missing required field: {field}'}, 400
+
     title = data['title']
     release_year = data['release_year']
     genre = data['genre']
     director = data['director']
-    rating = data["rating"]
-    duration = data["duration"]
-    imdb_rating = data["imdb_rating"]
+    rating = data['rating']
+    duration = data['duration']
+    imdb_rating = data['imdb_rating']
 
     # check if a movie with the same title already exists
-    movies = Movie.query.all()
-    movie_exist = False
-    for movie in movies:
-        if movie.title == title:
-            movie_exist = True
-            return {"error": 'Movie with this title already exists'}
+    movie_exists = bool(Movie.query.filter_by(title=title).first())
+    if movie_exists is True:
+        return {"error": 'Movie with this title already exists'}, 400
 
-    if movie_exist is False:
+    # create a new Movie object using data from the JSON request
+    new_movie = Movie(title=title, release_year=release_year, genre=genre,
+                      director=director, rating=rating, duration=duration, imdb_rating=imdb_rating)
 
-        # create a new Movie object using data from the JSON request
-        new_movie = Movie(title=title, release_year=release_year, genre=genre,
-                          director=director, rating=rating, duration=duration, imdb_rating=imdb_rating)
+    # add the new movie to database
+    db.session.add(new_movie)
+    db.session.commit()
 
-        # add the new movie to database
-        db.session.add(new_movie)
-        db.session.commit()
-
-        return {'message': 'Movie added successfully'}
+    return {'message': 'Movie added successfully'}, 201
 
 
 @app.route('/movies/<id>', methods=['PUT'])
+@jwt_required()
 def update_movie(id):
 
     # fetch specific movie to update by querying its ID
     movie = Movie.query.get_or_404(id)
 
-    # Retrieve JSON data from the client to my server
+    # retrieve JSON data from the client to my server
     data = request.get_json()
 
     title = data['title']
@@ -138,7 +230,7 @@ def update_movie(id):
     duration = data["duration"]
     imdb_rating = data["imdb_rating"]
 
-    # Update movie attributes in database
+    # update movie attributes in database
     movie.title = title
     movie.release_year = release_year
     movie.genre = genre
@@ -147,13 +239,14 @@ def update_movie(id):
     movie.duration = duration
     movie.imdb_rating = imdb_rating
 
-    # Commit the changes to the database
+    # commit the changes to the database
     db.session.commit()
 
-    return {'message': 'Movie updated successfully'}
+    return {'message': 'Movie updated successfully'}, 201
 
 
 @app.route('/movies/<id>', methods=['DELETE'])
+@jwt_required()
 def delete_movie(id):
 
     # query movie by id
@@ -168,4 +261,4 @@ def delete_movie(id):
     db.session.delete(movie)
     db.session.commit()
 
-    return {'message': 'Movie deleted successfully'}
+    return {'message': 'Movie deleted successfully'}, 201
