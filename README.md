@@ -10,8 +10,6 @@ A RESTful API built with Flask for managing and retrieving information about mov
 - [Endpoints](#endpoints)
 - [Usage](#usage)
 - [Testing with Postman](#testing-with-postman)
-- [Contributing](#contributing)
-- [License](#license)
 
 ## Features
 
