@@ -59,22 +59,14 @@ A RESTful API built with Flask for managing and retrieving information about mov
 
 ## Endpoints
 
-GET /movies: Retrieve a list of all movies
-
-POST /movies: Add a new movie
-
-GET /movies/<id>: Retrieve details of a specific movie by ID
-
-PUT /movies/<id>: Update a specific movie by ID
-
-DELETE /movies/<id>: Delete a specific movie by ID
-
-POST /register: Register a new user
-
-POST /login: Authenticate and obtain JWT access token
-
-GET /get_user: Retrieve user details
-
+- GET /movies: Retrieve a list of all movies
+- POST /movies: Add a new movie
+- GET /movies/<id>: Retrieve details of a specific movie by ID
+- PUT /movies/<id>: Update a specific movie by ID
+- DELETE /movies/<id>: Delete a specific movie by ID
+- POST /register: Register a new user
+- POST /login: Authenticate and obtain JWT access token
+- GET /get_user: Retrieve user details
 
 ## Usage
 
@@ -89,6 +81,7 @@ Content-Type: application/json
   "password": "password123"
 }
 
+```
 ### Login and Obtain JWT Token
 
 ```http
@@ -100,6 +93,7 @@ Content-Type: application/json
   "password": "password123"
 }
 
+```
 ### Add a New Movie
 
 ```http
@@ -117,4 +111,4 @@ Content-Type: application/json
   "imdb_rating": 7.5
 }
 
-
+```
